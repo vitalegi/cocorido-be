@@ -13,9 +13,13 @@ import org.springframework.stereotype.Component;
 @Aspect
 public class LoggingAspect {
 
+	private static AtomicLong ID = new AtomicLong();
+
 	private static Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
 
-	private static AtomicLong ID = new AtomicLong();
+	protected String getId() {
+		return ID.incrementAndGet() + "";
+	}
 
 	@Around("@annotation(LogExecutionTime)")
 	public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -48,19 +52,12 @@ public class LoggingAspect {
 		}
 	}
 
-	protected String getId() {
-		return ID.incrementAndGet() + "";
-	}
+	public void logMethodEnd() {
 
-	protected String messageEndOk(String id, String className, String methodNme, long duration) {
-		return String.format("%s - End Invoke:   %s | %s | Result: %s | Duration: %dms", //
-				id, className, methodNme, "OK", duration);
-	}
+		String id = ID.incrementAndGet() + "";
 
-	protected String messageEndError(String id, String className, String methodNme, long duration, String error,
-			String errorMessage) {
-		return String.format("%s - End Invoke:   %s | %s | Result: %s | Duration: %dms | Error: %s | Message: %s", //
-				id, className, methodNme, "KO", duration, error, errorMessage);
+		StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+		logger.info("{} End Invoke: {}", id, stackTrace[1].getMethodName());
 	}
 
 	public void logMethodStart() {
@@ -71,12 +68,15 @@ public class LoggingAspect {
 		logger.info("{} Start Invoke: {}", id, stackTrace[1].getMethodName());
 	}
 
-	public void logMethodEnd() {
+	protected String messageEndError(String id, String className, String methodNme, long duration, String error,
+			String errorMessage) {
+		return String.format("%s - End Invoke:   %s | %s | Result: %s | Duration: %dms | Error: %s | Message: %s", //
+				id, className, methodNme, "KO", duration, error, errorMessage);
+	}
 
-		String id = ID.incrementAndGet() + "";
-
-		StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-		logger.info("{} End Invoke:   {}", id, stackTrace[1].getMethodName());
+	protected String messageEndOk(String id, String className, String methodNme, long duration) {
+		return String.format("%s - End Invoke:   %s | %s | Result: %s | Duration: %dms", //
+				id, className, methodNme, "OK", duration);
 	}
 
 }

@@ -22,12 +22,16 @@ public class StorageUtil {
 	@Value("${data.folder}")
 	private String dataFolder;
 
+	private File getFile(String fileName) {
+		return Paths.get(dataFolder, fileName + ".json").toFile();
+	}
+
 	public <E> E getValue(String fileName, TypeReference<E> typeReference) {
 		return getValue(fileName, typeReference, null);
 	}
 
 	public synchronized <E> E getValue(String fileName, TypeReference<E> typeReference, E defaultValue) {
-		log.info("Start getValue {}", fileName);
+		log.debug("Start getValue {}", fileName);
 		File file = getFile(fileName);
 		if (!file.exists()) {
 			log.error("File {} doesn't exist.", file.getAbsolutePath());
@@ -35,7 +39,7 @@ public class StorageUtil {
 		}
 		try (InputStream is = new FileInputStream(file)) {
 			E value = JacksonUtil.getJsonMapper().<E>readValue(is, typeReference);
-			log.info("End getValue {}", fileName);
+			log.debug("End getValue {}", fileName);
 			return value;
 		} catch (IOException e) {
 			log.error("Error getValue {}: {}", fileName, e.getMessage());
@@ -44,19 +48,15 @@ public class StorageUtil {
 	}
 
 	public synchronized <E> void setValue(String fileName, E value) {
-		log.info("Start setValue {}", fileName);
+		log.debug("Start setValue {}", fileName);
 		Paths.get(dataFolder).toFile().mkdirs();
 		File file = getFile(fileName);
 		try (OutputStream os = new FileOutputStream(file)) {
 			JacksonUtil.getJsonMapper().writeValue(os, value);
-			log.info("End setValue {}", fileName);
+			log.debug("End setValue {}", fileName);
 		} catch (Exception e) {
 			log.error("Error setValue {}: {}", fileName, e.getMessage());
 			throw new RuntimeException(e);
 		}
-	}
-
-	private File getFile(String fileName) {
-		return Paths.get(dataFolder, fileName + ".json").toFile();
 	}
 }

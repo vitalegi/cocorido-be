@@ -1,60 +1,87 @@
 package it.vitalegi.cocorido.service;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.core.type.TypeReference;
+import org.springframework.transaction.annotation.Transactional;
 
 import it.vitalegi.cocorido.model.TablePlayer;
+import it.vitalegi.cocorido.repository.TablePlayerRepository;
+import it.vitalegi.cocorido.util.SqlUtil;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
-public class TablePlayerService extends StorageProxy<TablePlayer> {
+public class TablePlayerService {
 
-	public void register(long playerId, long tableId) {
+	@Autowired
+	TablePlayerRepository repository;
 
-	}
+	@Autowired
+	RoundService roundService;
 
-	public TablePlayer addPlayer(long playerId, long tableId) {
+	@Autowired
+	WhiteCardService whiteCardService;
 
-		List<TablePlayer> values = getValues();
+	@Autowired
+	private TablePlayerWhiteCardService tablePlayerWhiteCardService;
 
-		if (values.stream().anyMatch(tp -> tp.getPlayerId() == playerId && tp.getTableId() == tableId)) {
+	public TablePlayer addPlayer(long tableId, long playerId) {
+
+		log.info("Add to table {} user {}", tableId, playerId);
+		if (hasPlayer(tableId, playerId)) {
 			throw new IllegalArgumentException("Player already in game");
 		}
 		TablePlayer tablePlayer = new TablePlayer();
 		tablePlayer.setPlayerId(playerId);
 		tablePlayer.setTableId(tableId);
-		tablePlayer.setWhiteCards(new ArrayList<>());
 		tablePlayer.setScore(0);
-		addValue(tablePlayer);
+
+		tablePlayer = repository.save(tablePlayer);
 
 		return tablePlayer;
 	}
 
-	public void removePlayer(long playerId, long tableId) {
-		TablePlayer tablePlayer = getPlayer(playerId, tableId);
-		removeValue(tablePlayer);
+	@Transactional
+	public TablePlayer updatePlayerSession(long tableId, long playerId) {
+		TablePlayer player = getPlayer(tableId, playerId);
+		player.setLastUpdate(LocalDateTime.now());
+		return updatePlayer(player);
+	}
+
+	public TablePlayer addPlayerSafe(long tableId, long playerId) {
+		if (hasPlayer(tableId, playerId)) {
+			return getPlayer(tableId, playerId);
+		}
+		TablePlayer player = addPlayer(tableId, playerId);
+		tablePlayerWhiteCardService.fillWhiteCards(tableId, playerId);
+		return player;
+	}
+
+	public TablePlayer getPlayer(long tableId, long playerId) {
+		return repository.findByTableIdAndPlayerId(tableId, playerId);
 	}
 
 	public List<TablePlayer> getPlayers(long tableId) {
-		List<TablePlayer> values = getValues();
-		return values.stream().filter(tp -> tp.getTableId() == tableId).collect(Collectors.toList());
+		return SqlUtil.convert(repository.findByTableId(tableId));
 	}
 
-	public TablePlayer getPlayer(long playerId, long tableId) {
-		List<TablePlayer> values = getValues();
-		return values.stream()//
-				.filter(tp -> tp.getTableId() == tableId)//
-				.filter(tp -> tp.getPlayerId() == playerId)//
-				.findFirst()
-				.orElseThrow(() -> new RuntimeException("Player " + playerId + " table " + tableId + " not found"));
+	public boolean hasPlayer(long tableId, long playerId) {
+		return getPlayer(tableId, playerId) != null;
 	}
 
-	protected List<TablePlayer> getValues() {
-		return storageUtil.getValue(getStorageName(), new TypeReference<List<TablePlayer>>() {
-		}, new ArrayList<TablePlayer>());
+	public void removePlayer(long tableId, long playerId) {
+		TablePlayer tablePlayer = getPlayer(tableId, playerId);
+		repository.delete(tablePlayer);
+	}
+
+	public void removePlayers(long tableId) {
+		repository.deleteByTableId(tableId);
+	}
+
+	public TablePlayer updatePlayer(TablePlayer player) {
+		return repository.save(player);
 	}
 }

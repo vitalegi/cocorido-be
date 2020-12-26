@@ -8,7 +8,7 @@
 			<level>INFO</level>
 		</filter>
 		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{groupId}] %logger{32}: %m%n</Pattern>
+			<Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{userId}] [%X{requestId}] %logger: %m%n</Pattern>
 		</layout>
 	</appender>
 	
@@ -28,15 +28,31 @@
 			</timeBasedFileNamingAndTriggeringPolicy>
 		</rollingPolicy>
 	</appender>
-	<logger name="org.springframework" level="info" additivity="false">
+	
+	<appender name="StatsRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGS}/cocorido-timing.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{groupId}] %logger{100}: %m%n</Pattern>
+		</encoder>
+		<immediateFlush>true</immediateFlush>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOGS}/archived/cocorido-timing-%d{yyyy-MM-dd}.%i.log
+			</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>5MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+	</appender>
+	<logger name="it.vitalegi.cocorido.util.LoggingAspect" level="info" additivity="true">
+		<appender-ref ref="StatsRollingFile" />
+	</logger>
+	<logger name="it.vitalegi.cocorido" level="debug" additivity="false">
 		<appender-ref ref="RollingFile" />
 		<appender-ref ref="Console" />
 	</logger>
-	<logger name="org.apache.http" level="info" additivity="false">
-		<appender-ref ref="RollingFile" />
-		<appender-ref ref="Console" />
-	</logger>
-	<root level="debug">
+	<root level="info">
 		<appender-ref ref="RollingFile" />
 		<appender-ref ref="Console" />
 	</root>

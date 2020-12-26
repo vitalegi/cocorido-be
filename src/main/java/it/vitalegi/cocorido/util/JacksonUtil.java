@@ -21,11 +21,24 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  */
 public class JacksonUtil {
 
-	public static ObjectMapper getYamlMapper() {
-		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-		mapper.registerModule(new JavaTimeModule());
-		mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-		return mapper;
+	private static void close(Closeable closeable) {
+		try {
+			closeable.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static InputStream getInputStream(File file) {
+		try {
+			return new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static InputStream getInputStream(String path) {
+		return JacksonUtil.class.getResourceAsStream(path);
 	}
 
 	public static ObjectMapper getJsonMapper() {
@@ -33,6 +46,14 @@ public class JacksonUtil {
 		mapper.registerModule(new JavaTimeModule());
 		mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 		return mapper;
+	}
+
+	public static OutputStream getOutputStream(File file) {
+		try {
+			return new FileOutputStream(file);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static <E> E getValue(ObjectMapper mapper, Class<E> clazz, InputStream is) {
@@ -55,6 +76,14 @@ public class JacksonUtil {
 		}
 	}
 
+	public static <E> E getValueYaml(Class<E> clazz, InputStream is) {
+		try {
+			return getValue(getYamlMapper(), clazz, is);
+		} finally {
+			close(is);
+		}
+	}
+
 	public static <E> E getValueYaml(TypeReference<E> typeReference, InputStream is) {
 		try {
 			return getYamlMapper().<E>readValue(is, typeReference);
@@ -65,40 +94,11 @@ public class JacksonUtil {
 		}
 	}
 
-	public static <E> E getValueYaml(Class<E> clazz, InputStream is) {
-		try {
-			return getValue(getYamlMapper(), clazz, is);
-		} finally {
-			close(is);
-		}
-	}
-
-	private static void close(Closeable closeable) {
-		try {
-			closeable.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public static InputStream getInputStream(String path) {
-		return JacksonUtil.class.getResourceAsStream(path);
-	}
-
-	public static InputStream getInputStream(File file) {
-		try {
-			return new FileInputStream(file);
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public static OutputStream getOutputStream(File file) {
-		try {
-			return new FileOutputStream(file);
-		} catch (FileNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+	public static ObjectMapper getYamlMapper() {
+		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+		mapper.registerModule(new JavaTimeModule());
+		mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+		return mapper;
 	}
 
 	public static <E> void setValueYaml(OutputStream os, E value) {
