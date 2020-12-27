@@ -1,12 +1,14 @@
 package it.vitalegi.cocorido.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import it.vitalegi.cocorido.model.BlackCard;
+import it.vitalegi.cocorido.model.BoardPlayedBlackCard;
 import it.vitalegi.cocorido.repository.BlackCardRepository;
 import it.vitalegi.cocorido.util.RandomUtil;
 import it.vitalegi.cocorido.util.SqlUtil;
@@ -21,10 +23,13 @@ public class BlackCardService {
 	final String REPLACE_PLACEHOLDER = "___";
 
 	@Autowired
-	BlackCardRepository repository;
+	private BlackCardRepository repository;
 
 	@Autowired
-	SanitizationService sanitizationService;
+	private SanitizationService sanitizationService;
+
+	@Autowired
+	private BoardPlayedBlackCardService boardPlayedBlackCardService;
 
 	@Transactional
 	public BlackCard addBlackCard(String text) {
@@ -60,12 +65,25 @@ public class BlackCardService {
 		return SqlUtil.convert(repository.findAll());
 	}
 
-	public BlackCard getRandomBlackCard() {
+	@Transactional
+	public BlackCard pickNextBlackCardAndUpdate(long tableId) {
 		List<BlackCard> values = getBlackCards();
 		if (values.isEmpty()) {
 			throw new NullPointerException("Missing configuration, no blackcards provided");
 		}
-		return values.get(RandomUtil.random(values.size()));
+		List<BoardPlayedBlackCard> usedCards = boardPlayedBlackCardService.getCards(tableId);
+		List<BlackCard> remainingCards = values.stream() //
+				.filter(card -> usedCards.stream().noneMatch(used -> used.getBlackCardId() == card.getId())) //
+				.collect(Collectors.toList());
+		log.info("Black cards: used {}, available {}, remaining {}", usedCards.size(), values.size(),
+				remainingCards.size());
+		if (remainingCards.isEmpty()) {
+			log.info("Board {} used all available black cards, re-shuffle");
+			remainingCards = values;
+		}
+		BlackCard blackCard = remainingCards.get(RandomUtil.random(remainingCards.size()));
+		boardPlayedBlackCardService.addCard(tableId, blackCard.getId());
+		return blackCard;
 	}
 
 	public boolean hasBlackCard(String text) {

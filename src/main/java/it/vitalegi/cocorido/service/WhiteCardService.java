@@ -51,6 +51,10 @@ public class WhiteCardService {
 		return repository.findById(whiteCardId).get();
 	}
 
+	public boolean hasWhiteCard(long whiteCardId) {
+		return repository.findById(whiteCardId) != null;
+	}
+
 	public List<WhiteCard> getWhiteCards() {
 		return SqlUtil.convert(repository.findAll());
 	}

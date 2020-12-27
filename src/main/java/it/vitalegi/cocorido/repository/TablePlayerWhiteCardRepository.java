@@ -8,12 +8,12 @@ import it.vitalegi.cocorido.model.TablePlayerWhiteCard;
 
 public interface TablePlayerWhiteCardRepository extends CrudRepository<TablePlayerWhiteCard, Long> {
 
-	public List<TablePlayerWhiteCard> findByTableIdAndPlayerId(Long tableId, Long playerId);
+	public List<TablePlayerWhiteCard> findAllByTableIdAndPlayerId(Long tableId, Long playerId);
 
 	public List<TablePlayerWhiteCard> deleteByTableIdAndPlayerIdAndWhiteCardId(Long tableId, Long playerId,
 			Long whiteCardId);
 
-	public List<TablePlayerWhiteCard> findByTableId(Long tableId);
+	public List<TablePlayerWhiteCard> findAllByTableId(Long tableId);
 
 	public long countByTableIdAndPlayerId(Long tableId, Long playerId);
 

@@ -97,7 +97,7 @@ public class RoundManagerService {
 	}
 
 	protected Round initRound(long tableId) {
-		BlackCard blackCard = blackCardService.getRandomBlackCard();
+		BlackCard blackCard = blackCardService.pickNextBlackCardAndUpdate(tableId);
 		long nextBlackPlayer = roundService.getNextBlackPlayerId(tableId);
 		return roundService.addRound(tableId, blackCard.getId(), nextBlackPlayer,
 				GameStatus.WHITE_PLAYERS_CHOOSING_CARD);
