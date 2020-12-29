@@ -18,21 +18,28 @@ import lombok.extern.slf4j.Slf4j;
 public class RoundManagerService {
 
 	@Autowired
-	private BlackCardService blackCardService;
+	BlackCardService blackCardService;
 
 	@Autowired
-	private PlayerActionService playerActionService;
+	PlayerActionService playerActionService;
 
 	@Autowired
-	private RoundService roundService;
+	RoundService roundService;
 
 	@Autowired
-	private TablePlayerService tablePlayerService;
-	@Autowired
-	private TablePlayerWhiteCardService tablePlayerWhiteCardService;
+	TablePlayerService tablePlayerService;
 
 	@Autowired
-	private BoardService tableService;
+	TablePlayerWhiteCardService tablePlayerWhiteCardService;
+
+	@Autowired
+	BoardService tableService;
+
+	@Autowired
+	DrawWhiteCardService drawWhiteCardService;
+
+	@Autowired
+	DrawBlackCardService drawBlackCardService;
 
 	@Transactional
 	public void removePlayer(long tableId, long playerId) {
@@ -50,7 +57,7 @@ public class RoundManagerService {
 		Board table = tableService.addTable(name, playerId);
 		tablePlayerService.addPlayer(table.getId(), playerId);
 		initRound(table.getId());
-		tablePlayerWhiteCardService.fillWhiteCards(table.getId(), playerId);
+		drawWhiteCardService.drawCards(table.getId(), playerId);
 
 		return table;
 	}
@@ -97,10 +104,9 @@ public class RoundManagerService {
 	}
 
 	protected Round initRound(long tableId) {
-		BlackCard blackCard = blackCardService.pickNextBlackCardAndUpdate(tableId);
+		long blackCardId = drawBlackCardService.drawCard(tableId);
 		long nextBlackPlayer = roundService.getNextBlackPlayerId(tableId);
-		return roundService.addRound(tableId, blackCard.getId(), nextBlackPlayer,
-				GameStatus.WHITE_PLAYERS_CHOOSING_CARD);
+		return roundService.addRound(tableId, blackCardId, nextBlackPlayer, GameStatus.WHITE_PLAYERS_CHOOSING_CARD);
 	}
 
 	@Transactional
@@ -119,7 +125,7 @@ public class RoundManagerService {
 
 			List<TablePlayer> players = tablePlayerService.getPlayers(tableId);
 			for (TablePlayer player : players) {
-				tablePlayerWhiteCardService.fillWhiteCards(tableId, player.getPlayerId());
+				drawWhiteCardService.drawCards(tableId, player.getPlayerId());
 			}
 
 			return newRound.getStatus();

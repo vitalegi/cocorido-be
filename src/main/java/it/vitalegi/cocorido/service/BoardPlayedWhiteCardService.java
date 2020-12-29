@@ -26,6 +26,17 @@ public class BoardPlayedWhiteCardService {
 		repository.save(entity);
 	}
 
+	@Transactional
+	public void addCards(long boardId, List<Long> whiteCardIds) {
+		whiteCardIds.forEach(whiteCardId -> {
+			BoardPlayedWhiteCard entity = new BoardPlayedWhiteCard();
+			entity.setBoardId(boardId);
+			entity.setWhiteCardId(whiteCardId);
+			repository.save(entity);
+		});
+		log.info("Add entries {} {}", boardId, whiteCardIds);
+	}
+
 	public void resetCards(long boardId) {
 		log.info("Reset entries for {}", boardId);
 		repository.deleteByBoardId(boardId);

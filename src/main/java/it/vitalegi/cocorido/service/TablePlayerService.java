@@ -17,17 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 public class TablePlayerService {
 
 	@Autowired
-	TablePlayerRepository repository;
-
-	@Autowired
-	RoundService roundService;
-
-	@Autowired
-	WhiteCardService whiteCardService;
+	private TablePlayerRepository repository;
 
 	@Autowired
 	private TablePlayerWhiteCardService tablePlayerWhiteCardService;
 
+	@Autowired
+	private DrawWhiteCardService drawWhiteCardService;
+	
 	public TablePlayer addPlayer(long tableId, long playerId) {
 
 		log.info("Add to table {} user {}", tableId, playerId);
@@ -56,7 +53,7 @@ public class TablePlayerService {
 			return getPlayer(tableId, playerId);
 		}
 		TablePlayer player = addPlayer(tableId, playerId);
-		tablePlayerWhiteCardService.fillWhiteCards(tableId, playerId);
+		drawWhiteCardService.drawCards(tableId, playerId);
 		return player;
 	}
 

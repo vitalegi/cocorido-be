@@ -28,9 +28,6 @@ public class BlackCardService {
 	@Autowired
 	private SanitizationService sanitizationService;
 
-	@Autowired
-	private BoardPlayedBlackCardService boardPlayedBlackCardService;
-
 	@Transactional
 	public BlackCard addBlackCard(String text) {
 		if (StringUtil.isNullOrEmpty(text)) {
@@ -63,27 +60,6 @@ public class BlackCardService {
 
 	public List<BlackCard> getBlackCards() {
 		return SqlUtil.convert(repository.findAll());
-	}
-
-	@Transactional
-	public BlackCard pickNextBlackCardAndUpdate(long tableId) {
-		List<BlackCard> values = getBlackCards();
-		if (values.isEmpty()) {
-			throw new NullPointerException("Missing configuration, no blackcards provided");
-		}
-		List<BoardPlayedBlackCard> usedCards = boardPlayedBlackCardService.getCards(tableId);
-		List<BlackCard> remainingCards = values.stream() //
-				.filter(card -> usedCards.stream().noneMatch(used -> used.getBlackCardId() == card.getId())) //
-				.collect(Collectors.toList());
-		log.info("Black cards: used {}, available {}, remaining {}", usedCards.size(), values.size(),
-				remainingCards.size());
-		if (remainingCards.isEmpty()) {
-			log.info("Board {} used all available black cards, re-shuffle");
-			remainingCards = values;
-		}
-		BlackCard blackCard = remainingCards.get(RandomUtil.random(remainingCards.size()));
-		boardPlayedBlackCardService.addCard(tableId, blackCard.getId());
-		return blackCard;
 	}
 
 	public boolean hasBlackCard(String text) {
