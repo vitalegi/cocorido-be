@@ -11,9 +11,11 @@ import it.vitalegi.cocorido.model.BlackCard;
 import it.vitalegi.cocorido.model.BoardPlayedBlackCard;
 import it.vitalegi.cocorido.util.ListUtil;
 import it.vitalegi.cocorido.util.RandomUtil;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Setter
 @Service
 public class DrawBlackCardService {
 
@@ -23,6 +25,9 @@ public class DrawBlackCardService {
 	@Autowired
 	BoardPlayedBlackCardService boardPlayedBlackCardService;
 
+	@Autowired
+	RandomUtil randomUtil;
+	
 	@Transactional
 	public long drawCard(long tableId) {
 
@@ -43,7 +48,7 @@ public class DrawBlackCardService {
 	}
 
 	protected Long drawCard(Long boardId, List<Long> deck) {
-		long blackCardId = deck.get(RandomUtil.random(deck.size()));
+		long blackCardId = deck.get(randomUtil.random(deck.size()));
 		boardPlayedBlackCardService.addCard(boardId, blackCardId);
 		return blackCardId;
 	}

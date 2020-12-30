@@ -9,13 +9,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import it.vitalegi.cocorido.model.PlayerStatus;
 import it.vitalegi.cocorido.model.Round;
 import it.vitalegi.cocorido.model.TablePlayer;
+import it.vitalegi.cocorido.service.GetPlayedWhiteCardsService;
 import it.vitalegi.cocorido.service.PlayerActionService;
 import it.vitalegi.cocorido.service.PlayerService;
 import it.vitalegi.cocorido.service.RoundService;
 import it.vitalegi.cocorido.service.TablePlayerService;
+import it.vitalegi.cocorido.util.Entry;
 import it.vitalegi.cocorido.util.LogExecutionTime;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,19 +37,25 @@ public class RoundStatusController {
 	@Autowired
 	private TablePlayerService tablePlayerService;
 
+	@Autowired
+	private GetPlayedWhiteCardsService getPlayedWhiteCardsService;
+
 	@LogExecutionTime
 	@GetMapping("/roundStatus/{tableId}")
-	public List<PlayerStatus> getRoundStatus(@PathVariable long tableId) {
+	public void getRoundStatus(@PathVariable long tableId) {
 		List<TablePlayer> players = tablePlayerService.getPlayers(tableId);
 		Round round = roundService.getLastRound(tableId);
 		log.debug("Round {}", round.getRoundId());
-		return players.stream().map(player -> {
+		players.stream().map(player -> {
 			long playerId = player.getPlayerId();
-			PlayerStatus status = new PlayerStatus();
-			status.setPlayer(playerService.getPlayer(playerId));
-			status.setTablePlayer(player);
-			status.setWhitecards(playerActionService.findPlayerActions(round.getRoundId(), playerId));
-			return status;
+			return "";
 		}).collect(Collectors.toList());
+	}
+
+	@LogExecutionTime
+	@GetMapping("/roundStatus/{tableId}/whiteCards")
+	public List<Entry> getWhiteCards(@PathVariable long tableId) {
+		Round round = roundService.getLastRound(tableId);
+		return getPlayedWhiteCardsService.getPlayedWhiteCards(round.getRoundId());
 	}
 }

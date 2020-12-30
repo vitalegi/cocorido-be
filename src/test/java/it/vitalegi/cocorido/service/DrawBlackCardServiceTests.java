@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import it.vitalegi.cocorido.UnitTest;
 import it.vitalegi.cocorido.util.ModelBuilder;
+import it.vitalegi.cocorido.util.RandomUtil;
+
+import static it.vitalegi.cocorido.util.ListUtil.list;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,6 +25,9 @@ public class DrawBlackCardServiceTests extends UnitTest {
 
 	@Autowired
 	ModelBuilder models;
+
+	@Autowired
+	RandomUtil randomUtil;
 
 	@Test
 	public void testEnoughCardsInDeck() {
@@ -54,14 +60,7 @@ public class DrawBlackCardServiceTests extends UnitTest {
 		when(service.boardPlayedBlackCardService.getCards(BOARD_ID))
 				.thenReturn(models.boardPlayedBlackCards(BOARD_ID, alreadyDrawnCards));
 
+		service.setRandomUtil(randomUtil);
 		return service;
-	}
-
-	protected long[] list(long... values) {
-		long[] out = new long[values.length];
-		for (int i = 0; i < values.length; i++) {
-			out[i] = values[i];
-		}
-		return out;
 	}
 }

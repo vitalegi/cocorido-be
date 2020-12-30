@@ -62,4 +62,31 @@ public class ListUtil {
 		};
 		return copy(list, fn);
 	}
+
+	public static <E> boolean containSame(List<E> list1, List<E> list2) {
+		if (list1 == null && list2 == null) {
+			return true;
+		}
+		if (list1 == null || list2 == null) {
+			return false;
+		}
+		list1 = copy(list1, Function.identity());
+		list2 = copy(list2, Function.identity());
+		for (E v1 : list1) {
+			int index = list2.indexOf(v1);
+			if (index == -1) {
+				return false;
+			}
+			list2.remove(index);
+		}
+		return list2.isEmpty();
+	}
+
+	public static long[] list(long... values) {
+		long[] out = new long[values.length];
+		for (int i = 0; i < values.length; i++) {
+			out[i] = values[i];
+		}
+		return out;
+	}
 }

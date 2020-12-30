@@ -1,6 +1,7 @@
 package it.vitalegi.cocorido.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,4 +40,9 @@ public class PlayerService {
 		return SqlUtil.convert(repository.findAll());
 	}
 
+	public List<Player> getPlayers(List<Long> ids) {
+		return getPlayers().stream()//
+				.filter(player -> ids.contains(player.getPlayerId()))//
+				.collect(Collectors.toList());
+	}
 }

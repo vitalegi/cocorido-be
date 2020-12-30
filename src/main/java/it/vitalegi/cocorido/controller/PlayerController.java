@@ -1,6 +1,7 @@
 package it.vitalegi.cocorido.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.vitalegi.cocorido.model.Player;
+import it.vitalegi.cocorido.model.TablePlayer;
 import it.vitalegi.cocorido.service.PlayerService;
+import it.vitalegi.cocorido.service.TablePlayerService;
 import it.vitalegi.cocorido.util.LogExecutionTime;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,6 +25,9 @@ public class PlayerController {
 
 	@Autowired
 	PlayerService playerService;
+
+	@Autowired
+	TablePlayerService tablePlayerService;
 
 	@LogExecutionTime
 	@PutMapping("/player")
@@ -39,5 +45,13 @@ public class PlayerController {
 	@GetMapping("/players")
 	public List<Player> getPlayers() {
 		return playerService.getPlayers();
+	}
+
+	@LogExecutionTime
+	@GetMapping("/players/{tableId}")
+	public List<Player> getPlayers(@PathVariable long tableId) {
+		List<TablePlayer> tablePlayers = tablePlayerService.getPlayers(tableId);
+		List<Long> ids = tablePlayers.stream().map(TablePlayer::getPlayerId).collect(Collectors.toList());
+		return playerService.getPlayers(ids);
 	}
 }

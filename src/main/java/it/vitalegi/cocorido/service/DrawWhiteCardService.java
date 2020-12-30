@@ -9,29 +9,35 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ch.qos.logback.classic.Logger;
 import it.vitalegi.cocorido.model.BoardPlayedWhiteCard;
 import it.vitalegi.cocorido.model.TablePlayerWhiteCard;
 import it.vitalegi.cocorido.model.WhiteCard;
 import it.vitalegi.cocorido.util.ListUtil;
 import it.vitalegi.cocorido.util.RandomUtil;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Setter
+@Getter
 @Service
 public class DrawWhiteCardService {
 
 	@Value("${game.config.cards-in-hand}")
-	protected int cardsInHand;
+	private int cardsInHand;
 
 	@Autowired
-	protected WhiteCardService whiteCardService;
+	private WhiteCardService whiteCardService;
 
 	@Autowired
-	protected BoardPlayedWhiteCardService boardPlayedWhiteCardService;
+	private BoardPlayedWhiteCardService boardPlayedWhiteCardService;
 
 	@Autowired
-	protected TablePlayerWhiteCardService tablePlayerWhiteCardService;
+	private TablePlayerWhiteCardService tablePlayerWhiteCardService;
+
+	@Autowired
+	private RandomUtil randomUtil;
 
 	@Transactional
 	public List<TablePlayerWhiteCard> drawCards(long tableId, long playerId) {
@@ -110,7 +116,7 @@ public class DrawWhiteCardService {
 	protected List<Long> drawCardsAndUpdateDeck(long tableId, List<Long> deck, int cards) {
 		if (deck.size() < cards) {
 			log.info("Cards: {} Deck: {}", cards, deck);
-			throw new IllegalArgumentException("Deck doesn't have all the request cards");
+			throw new IllegalArgumentException("Deck doesn't have all the needed cards");
 		}
 		deck = ListUtil.copy(deck);
 		List<Long> newCards = new ArrayList<>();
@@ -125,6 +131,6 @@ public class DrawWhiteCardService {
 	}
 
 	protected int nextCardIndex(List<Long> deck) {
-		return RandomUtil.random(deck.size());
+		return randomUtil.random(deck.size());
 	}
 }

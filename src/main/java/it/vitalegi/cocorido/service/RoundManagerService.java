@@ -110,6 +110,15 @@ public class RoundManagerService {
 	}
 
 	@Transactional
+	public Round changeBlackCard(long tableId) {
+		long blackCardId = drawBlackCardService.drawCard(tableId);
+		Round round = roundService.getLastRound(tableId);
+		log.info("Board {}, change blackCard from {} to {}", tableId, round.getBlackCardId(), blackCardId);
+		round.setBlackCardId(blackCardId);
+		return roundService.updateRound(round);
+	}
+
+	@Transactional
 	public GameStatus nextStatus(long roundId, long authId, boolean force) {
 		Round round = roundService.getRound(roundId);
 		long tableId = round.getTableId();

@@ -23,6 +23,9 @@ public class MvcConfig implements WebMvcConfigurer {
 	@Value("${cors.allowedOrigins}")
 	List<String> corsAllowedOrigins;
 
+	@Value("${cors.allowedMethods}")
+	List<String> corsAllowedMethods;
+	
 	@Value("${frontend.resources.location}")
 	String frontendResources;
 
@@ -30,7 +33,7 @@ public class MvcConfig implements WebMvcConfigurer {
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**")//
 				.allowedOrigins(ListUtil.toArray(String.class, corsAllowedOrigins))//
-				.allowedMethods("GET", "POST", "PUT", "DELETE");
+				.allowedMethods(ListUtil.toArray(String.class, corsAllowedMethods));
 	}
 
 	@Override

@@ -1,13 +1,19 @@
 package it.vitalegi.cocorido.util;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import it.vitalegi.cocorido.GameStatus;
 import it.vitalegi.cocorido.model.BlackCard;
 import it.vitalegi.cocorido.model.BoardPlayedBlackCard;
 import it.vitalegi.cocorido.model.BoardPlayedWhiteCard;
+import it.vitalegi.cocorido.model.Round;
+import it.vitalegi.cocorido.model.TablePlayer;
 import it.vitalegi.cocorido.model.TablePlayerWhiteCard;
 import it.vitalegi.cocorido.model.WhiteCard;
 
@@ -59,6 +65,7 @@ public class ModelBuilder {
 		entry.setWhiteCardId(whiteCardId);
 		return entry;
 	}
+
 	public List<BoardPlayedBlackCard> boardPlayedBlackCards(long boardId, long... blackCardIds) {
 		List<BoardPlayedBlackCard> entries = new ArrayList<>();
 		for (long id : blackCardIds) {
@@ -89,5 +96,34 @@ public class ModelBuilder {
 		entry.setTableId(boardId);
 		entry.setWhiteCardId(whiteCardId);
 		return entry;
+	}
+
+	public Round round(Long roundId, Long blackCardId, Long blackPlayerId, GameStatus status, Long tableId,
+			Long winnerPlayerId, List<Long> playersOrder) {
+		Round entry = new Round();
+		entry.setBlackCardId(blackCardId);
+		entry.setBlackPlayerId(blackPlayerId);
+		entry.setStatus(status);
+		entry.setTableId(tableId);
+		entry.setWinnerPlayerId(winnerPlayerId);
+		entry.setPlayersOrder(playersOrder);
+		return entry;
+	}
+
+	public TablePlayer tablePlayer(Long tablePlayerId, Long playerId, Integer score, Long tableId) {
+		TablePlayer entry = new TablePlayer();
+		entry.setTablePlayerId(tablePlayerId);
+		entry.setPlayerId(playerId);
+		entry.setScore(score);
+		entry.setTableId(tableId);
+		return entry;
+	}
+
+	public List<TablePlayer> tablePlayers(Long tableId, Long... playerIds) {
+		List<TablePlayer> entries = new ArrayList<>();
+		for (long id : playerIds) {
+			entries.add(tablePlayer(null, id, null, tableId));
+		}
+		return entries;
 	}
 }

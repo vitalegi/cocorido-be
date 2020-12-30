@@ -1,5 +1,8 @@
 package it.vitalegi.cocorido.model;
 
+import java.util.List;
+
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,4 +28,6 @@ public class Round {
 	GameStatus status;
 	Long tableId;
 	Long winnerPlayerId;
+	@ElementCollection
+	List<Long> playersOrder;
 }
