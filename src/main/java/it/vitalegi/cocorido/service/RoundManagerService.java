@@ -11,6 +11,7 @@ import it.vitalegi.cocorido.model.BlackCard;
 import it.vitalegi.cocorido.model.Board;
 import it.vitalegi.cocorido.model.Round;
 import it.vitalegi.cocorido.model.TablePlayer;
+import it.vitalegi.cocorido.websocket.BoardPublisher;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,6 +42,9 @@ public class RoundManagerService {
 	@Autowired
 	DrawBlackCardService drawBlackCardService;
 
+	@Autowired
+	BoardPublisher boardPublisher;
+
 	@Transactional
 	public void removePlayer(long tableId, long playerId) {
 		log.info("Delete player {} from {}", playerId, tableId);
@@ -49,6 +53,7 @@ public class RoundManagerService {
 		if (round.getBlackPlayerId() == playerId) {
 			initRound(tableId);
 		}
+		boardPublisher.notifyUpdate(tableId, "Player " + playerId + " left table");
 	}
 
 	@Transactional
@@ -64,7 +69,9 @@ public class RoundManagerService {
 
 	@Transactional
 	public TablePlayer joinTable(long tableId, long playerId) {
-		return tablePlayerService.addPlayerSafe(tableId, playerId);
+		TablePlayer player = tablePlayerService.addPlayerSafe(tableId, playerId);
+		boardPublisher.notifyUpdate(tableId, "New Player " + playerId + " joined table");
+		return player;
 	}
 
 	@Transactional
@@ -115,15 +122,21 @@ public class RoundManagerService {
 		Round round = roundService.getLastRound(tableId);
 		log.info("Board {}, change blackCard from {} to {}", tableId, round.getBlackCardId(), blackCardId);
 		round.setBlackCardId(blackCardId);
-		return roundService.updateRound(round);
+		round = roundService.updateRound(round);
+		boardPublisher.notifyUpdate(tableId, "Changed black card");
+		return round;
+	}
+
+	@Transactional
+	public void updateOnlineTimer(long boardId, long authId) {
+		tableService.updateSession(boardId);
+		tablePlayerService.updatePlayerSession(boardId, authId);
 	}
 
 	@Transactional
 	public GameStatus nextStatus(long roundId, long authId, boolean force) {
 		Round round = roundService.getRound(roundId);
 		long tableId = round.getTableId();
-		tableService.updateSession(tableId);
-		tablePlayerService.updatePlayerSession(tableId, authId);
 		GameStatus status = round.getStatus();
 		log.debug("table {}, force {}, status {}", tableId, force, status);
 
@@ -136,7 +149,7 @@ public class RoundManagerService {
 			for (TablePlayer player : players) {
 				drawWhiteCardService.drawCards(tableId, player.getPlayerId());
 			}
-
+			boardPublisher.notifyUpdate(tableId, "Init phase is completed");
 			return newRound.getStatus();
 		}
 		if (status == GameStatus.WHITE_PLAYERS_CHOOSING_CARD) {
@@ -155,6 +168,7 @@ public class RoundManagerService {
 				round.setStatus(GameStatus.BLACK_PLAYER_VOTING);
 				roundService.updateRound(round);
 				log.info("closed white player phase, force={} whiteCardsPlayed={}", force, whiteCardsPlayed);
+				boardPublisher.notifyUpdate(tableId, "White players phase is completed");
 			}
 			return round.getStatus();
 		}
@@ -171,6 +185,7 @@ public class RoundManagerService {
 			log.info("No player have completed the white cards selection, skip the round");
 			round.setStatus(GameStatus.NEW_ROUND);
 			roundService.updateRound(round);
+			boardPublisher.notifyUpdate(tableId, "Start new round, no white cards was played");
 		}
 		log.info("Unknown status {}", round.getStatus());
 		return round.getStatus();
@@ -188,6 +203,7 @@ public class RoundManagerService {
 			return;
 		}
 		playerActionService.addPlayerAction(round.getRoundId(), playerId, whiteCardId);
+		boardPublisher.notifyUpdate(tableId, "white card was played by " + playerId);
 	}
 
 	@Transactional
@@ -206,5 +222,6 @@ public class RoundManagerService {
 		round.setWinnerPlayerId(winnerPlayerId);
 		round.setStatus(GameStatus.NEW_ROUND);
 		roundService.updateRound(round);
+		boardPublisher.notifyUpdate(tableId, "Winner of the round is " + winnerPlayerId);
 	}
 }

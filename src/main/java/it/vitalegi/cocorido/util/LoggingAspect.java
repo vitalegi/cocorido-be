@@ -52,22 +52,6 @@ public class LoggingAspect {
 		}
 	}
 
-	public void logMethodEnd() {
-
-		String id = ID.incrementAndGet() + "";
-
-		StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-		logger.info("{} End Invoke: {}", id, stackTrace[1].getMethodName());
-	}
-
-	public void logMethodStart() {
-
-		String id = ID.incrementAndGet() + "";
-
-		StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-		logger.info("{} Start Invoke: {}", id, stackTrace[1].getMethodName());
-	}
-
 	protected String messageEndError(String id, String className, String methodNme, long duration, String error,
 			String errorMessage) {
 		return String.format("%s - End Invoke:   %s | %s | Result: %s | Duration: %dms | Error: %s | Message: %s", //
