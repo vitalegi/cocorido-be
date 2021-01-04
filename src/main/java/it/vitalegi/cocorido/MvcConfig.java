@@ -9,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import it.vitalegi.cocorido.util.ListUtil;
@@ -42,6 +43,11 @@ public class MvcConfig implements WebMvcConfigurer {
 		registry.addResourceHandler("/**")//
 				.addResourceLocations(frontendResources)//
 				.setCachePeriod(60);
+	}
+
+	@Override
+	public void addViewControllers(ViewControllerRegistry registry) {
+		registry.addRedirectViewController("", "/index.html");
 	}
 
 	@Override
